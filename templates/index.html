@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VoiceForge — Text to Speech</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f5f6fa;
+  color: #111;
+  min-height: 100vh;
+  padding: 32px 16px 60px;
+}
+.app { max-width: 660px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+/* Header */
+.header { text-align: center; padding: 8px 0 4px; }
+.logo { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.logo-icon { width: 38px; height: 38px; background: #2563eb; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; }
+.logo-title { font-size: 22px; font-weight: 600; color: #111; }
+.header p { font-size: 14px; color: #6b7280; }
+
+/* Cards */
+.card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 20px 22px;
+  transition: box-shadow .2s;
+}
+.card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.card-title {
+  font-size: 11px; font-weight: 600; color: #9ca3af;
+  text-transform: uppercase; letter-spacing: 0.8px;
+  display: block; margin-bottom: 14px;
+}
+
+/* Textarea */
+.textarea-wrap { position: relative; }
+textarea {
+  width: 100%; height: 150px;
+  border: 1px solid #e5e7eb; border-radius: 10px;
+  padding: 12px 14px; font-size: 15px;
+  font-family: inherit; color: #111;
+  background: #f9fafb; resize: vertical;
+  outline: none; transition: border-color .2s, box-shadow .2s;
+  line-height: 1.6;
+}
+textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); background: #fff; }
+.char-count { position: absolute; bottom: 10px; right: 14px; font-size: 12px; color: #9ca3af; }
+
+/* Detect badge */
+.detect-badge {
+  display: none; align-items: center; gap: 6px;
+  margin-top: 10px; padding: 5px 12px;
+  background: #eff6ff; border: 1px solid #bfdbfe;
+  border-radius: 20px; width: fit-content;
+  font-size: 12px; font-weight: 500; color: #1d4ed8;
+}
+
+/* Warning */
+.warning-card {
+  display: none;
+  background: #fffbeb; border: 1px solid #fde68a;
+  border-radius: 14px; padding: 16px 20px;
+}
+.warning-inner { display: flex; gap: 12px; align-items: flex-start; }
+.warn-icon-box {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: #fef3c7; display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0;
+}
+.warn-msg { font-size: 13px; color: #92400e; margin: 0 0 10px; line-height: 1.5; }
+.warn-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Controls */
+.controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@media(max-width:520px) { .controls { grid-template-columns: 1fr 1fr; } }
+.control-group label { font-size: 12px; color: #6b7280; display: block; margin-bottom: 6px; font-weight: 500; }
+.select-wrap { position: relative; }
+select {
+  width: 100%; padding: 9px 32px 9px 12px;
+  font-size: 13px; font-family: inherit;
+  background: #f9fafb; border: 1px solid #e5e7eb;
+  border-radius: 8px; color: #111;
+  appearance: none; cursor: pointer; outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+select:hover { border-color: #d1d5db; background: #fff; }
+select:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); background: #fff; }
+.select-arrow { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+
+/* Gender toggle */
+.gender-row { display: flex; gap: 6px; }
+.gender-btn {
+  flex: 1; padding: 9px 6px; font-size: 12px; font-weight: 500;
+  border-radius: 8px; cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+  font-family: inherit;
+}
+.gender-btn.active { background: #eff6ff; border: 1px solid #2563eb; color: #1d4ed8; }
+.gender-btn.inactive { background: #fff; border: 1px solid #e5e7eb; color: #6b7280; }
+.gender-btn:hover:not(.active) { background: #f9fafb; border-color: #d1d5db; }
+
+/* Voice chips */
+.voice-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; padding-top: 14px; border-top: 1px solid #f3f4f6; }
+.voice-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 20px; font-size: 11px;
+  border: 1px solid; font-weight: 500;
+}
+.voice-chip.active { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+.voice-chip.inactive { background: #f9fafb; border-color: #e5e7eb; color: #9ca3af; }
+
+/* Buttons */
+.action-row { display: flex; gap: 10px; }
+.btn-primary {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 13px 20px; background: #2563eb; color: #fff;
+  border: none; border-radius: 10px; font-size: 14px; font-weight: 600;
+  font-family: inherit; cursor: pointer;
+  transition: background .15s, transform .1s, box-shadow .15s;
+}
+.btn-primary:hover:not(:disabled) { background: #1d4ed8; box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+.btn-primary:active:not(:disabled) { transform: scale(0.98); }
+.btn-primary:disabled { background: #93c5fd; cursor: not-allowed; }
+
+.btn-secondary {
+  display: none; align-items: center; gap: 7px;
+  padding: 13px 18px; background: #fff; color: #2563eb;
+  border: 1px solid #bfdbfe; border-radius: 10px;
+  font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer;
+  transition: background .15s, border-color .15s, box-shadow .15s;
+}
+.btn-secondary:hover { background: #eff6ff; border-color: #93c5fd; box-shadow: 0 2px 8px rgba(37,99,235,0.1); }
+
+.btn-warn-primary {
+  padding: 6px 14px; font-size: 12px; font-weight: 500;
+  background: #f59e0b; color: #fff; border: none;
+  border-radius: 6px; cursor: pointer; font-family: inherit;
+  transition: background .15s;
+}
+.btn-warn-primary:hover { background: #d97706; }
+.btn-warn-ghost {
+  padding: 6px 14px; font-size: 12px; font-weight: 500;
+  background: transparent; color: #92400e;
+  border: 1px solid #f59e0b; border-radius: 6px;
+  cursor: pointer; font-family: inherit; transition: background .15s;
+}
+.btn-warn-ghost:hover { background: #fef3c7; }
+
+/* Status */
+.status-text { text-align: center; font-size: 13px; color: #6b7280; min-height: 18px; margin-top: -6px; }
+
+/* Player */
+.player-card { display: none; }
+.player-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; animation: pulse 2s infinite; }
+.player-info { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.player-icon { width: 36px; height: 36px; border-radius: 8px; background: #eff6ff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+audio { width: 100%; height: 36px; accent-color: #2563eb; }
+
+/* Spinner */
+.spinner { width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; display: none; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="22"/>
+        </svg>
+      </div>
+      <span class="logo-title">VoiceForge</span>
+    </div>
+    <p>Convert text to natural-sounding speech in any language</p>
+  </div>
+
+  <!-- Text Input -->
+  <div class="card">
+    <span class="card-title">Your text</span>
+    <div class="textarea-wrap">
+      <textarea id="textInput" oninput="onTextInput()" maxlength="2000"
+        placeholder="Type or paste your text here…"></textarea>
+      <span class="char-count" id="charCount">0 / 2000</span>
+    </div>
+    <div class="detect-badge" id="detectBadge">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round">
+        <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+      </svg>
+      <span id="detectLabel">Auto-detected: —</span>
+    </div>
+  </div>
+
+  <!-- Warning -->
+  <div class="warning-card" id="warningBox">
+    <div class="warning-inner">
+      <div class="warn-icon-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <div>
+        <p class="warn-msg" id="warnMsg"></p>
+        <div class="warn-actions">
+          <button class="btn-warn-primary" id="warnSwitch" onclick="switchToDetected()">Switch language</button>
+          <button class="btn-warn-ghost" onclick="dismissWarning()">Keep selection</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Voice Settings -->
+  <div class="card">
+    <span class="card-title">Voice settings</span>
+    <div class="controls">
+
+      <div class="control-group">
+        <label>Language</label>
+        <div class="select-wrap">
+          <select id="langSelect" onchange="onLangChange()">
+            <option value="en">English</option>
+            <option value="bn">বাংলা (Bangla)</option>
+            <option value="hi">हिन्दी (Hindi)</option>
+            <option value="ar">Arabic</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="es">Español</option>
+            <option value="zh">中文 (Chinese)</option>
+            <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
+            <option value="pt">Português</option>
+            <option value="ru">Русский</option>
+            <option value="tr">Türkçe</option>
+          </select>
+          <svg class="select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label>Voice</label>
+        <div class="gender-row">
+          <button id="btnFemale" class="gender-btn active" onclick="setGender('female')">Female</button>
+          <button id="btnMale" class="gender-btn inactive" onclick="setGender('male')">Male</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label>Accent / Region</label>
+        <div class="select-wrap">
+          <select id="styleSelect" onchange="updateVoiceChips()">
+          </select>
+          <svg class="select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+
+    </div>
+    <div class="voice-chips" id="voiceChips"></div>
+  </div>
+
+  <!-- Actions -->
+  <div class="action-row">
+    <button class="btn-primary" id="playBtn" onclick="synthesize()">
+      <svg id="playIcon" width="15" height="15" viewBox="0 0 24 24" fill="#fff"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <div class="spinner" id="spinner"></div>
+      <span id="playLabel">Convert &amp; play</span>
+    </button>
+    <button class="btn-secondary" id="downloadBtn" onclick="downloadAudio()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Download MP3
+    </button>
+  </div>
+
+  <div class="status-text" id="statusText"></div>
+
+  <!-- Player -->
+  <div class="card player-card" id="playerCard">
+    <div class="player-header">
+      <div class="live-dot"></div>
+      <span class="card-title" style="margin-bottom:0;">Now playing</span>
+    </div>
+    <div class="player-info">
+      <div class="player-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="#2563eb"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </div>
+      <div>
+        <p style="font-size:13px;font-weight:600;color:#111;margin:0 0 2px;" id="voiceUsed">—</p>
+        <p style="font-size:11px;color:#9ca3af;margin:0;">Neural voice · MP3</p>
+      </div>
+    </div>
+    <audio id="audioPlayer" controls></audio>
+  </div>
+
+</div>
+
+<script>
+const REGIONS = {
+  en:[{value:"us",label:"American (US)"},{value:"uk",label:"British (UK)"},{value:"in",label:"Indian"}],
+  bn:[{value:"bd",label:"Bangladeshi"},{value:"in",label:"West Bengal"}],
+  hi:[{value:"in",label:"Indian"}],
+  ar:[{value:"sa",label:"Saudi Arabic"}],
+  fr:[{value:"fr",label:"French"}],
+  de:[{value:"de",label:"German"}],
+  es:[{value:"es",label:"Spanish"}],
+  zh:[{value:"cn",label:"Mandarin (China)"}],
+  ja:[{value:"jp",label:"Japanese"}],
+  ko:[{value:"kr",label:"Korean"}],
+  pt:[{value:"br",label:"Brazilian"}],
+  ru:[{value:"ru",label:"Russian"}],
+  tr:[{value:"tr",label:"Turkish"}],
+};
+const VOICE_MAP = {
+  en:{us:{female:"en-US-JennyNeural",male:"en-US-GuyNeural"},uk:{female:"en-GB-SoniaNeural",male:"en-GB-RyanNeural"},in:{female:"en-IN-NeerjaNeural",male:"en-IN-PrabhatNeural"}},
+  bn:{bd:{female:"bn-BD-NabanitaNeural",male:"bn-BD-PradeepNeural"},in:{female:"bn-IN-TanishaaNeural",male:"bn-IN-BashkarNeural"}},
+  hi:{in:{female:"hi-IN-SwaraNeural",male:"hi-IN-MadhurNeural"}},
+  ar:{sa:{female:"ar-SA-ZariyahNeural",male:"ar-SA-HamedNeural"}},
+  fr:{fr:{female:"fr-FR-DeniseNeural",male:"fr-FR-HenriNeural"}},
+  de:{de:{female:"de-DE-KatjaNeural",male:"de-DE-ConradNeural"}},
+  es:{es:{female:"es-ES-ElviraNeural",male:"es-ES-AlvaroNeural"}},
+  zh:{cn:{female:"zh-CN-XiaoxiaoNeural",male:"zh-CN-YunjianNeural"}},
+  ja:{jp:{female:"ja-JP-NanamiNeural",male:"ja-JP-KeitaNeural"}},
+  ko:{kr:{female:"ko-KR-SunHiNeural",male:"ko-KR-InJoonNeural"}},
+  pt:{br:{female:"pt-BR-FranciscaNeural",male:"pt-BR-AntonioNeural"}},
+  ru:{ru:{female:"ru-RU-SvetlanaNeural",male:"ru-RU-DmitryNeural"}},
+  tr:{tr:{female:"tr-TR-EmelNeural",male:"tr-TR-AhmetNeural"}},
+};
+const LANG_NAMES={en:"English",bn:"Bangla",hi:"Hindi",ar:"Arabic",fr:"French",de:"German",es:"Spanish",zh:"Chinese",ja:"Japanese",ko:"Korean",pt:"Portuguese",ru:"Russian",tr:"Turkish"};
+
+let currentGender="female", pendingDetected=null, currentAudioUrl="", debounceTimer=null;
+
+function populateRegions(lang){
+  const sel=document.getElementById("styleSelect");
+  sel.innerHTML=(REGIONS[lang]||[]).map(o=>`<option value="${o.value}">${o.label}</option>`).join("");
+  updateVoiceChips();
+}
+function updateVoiceChips(){
+  const lang=document.getElementById("langSelect").value;
+  const style=document.getElementById("styleSelect").value;
+  const c=document.getElementById("voiceChips");
+  const v=VOICE_MAP[lang]?.[style];
+  if(!v){c.innerHTML="";return;}
+  c.innerHTML=["female","male"].map(g=>`
+    <span class="voice-chip ${g===currentGender?"active":"inactive"}">
+      <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="${g===currentGender?"#2563eb":"#d1d5db"}"/></svg>
+      ${v[g]}
+    </span>`).join("");
+}
+function setGender(g){
+  currentGender=g;
+  document.getElementById("btnFemale").className="gender-btn "+(g==="female"?"active":"inactive");
+  document.getElementById("btnMale").className="gender-btn "+(g==="male"?"active":"inactive");
+  updateVoiceChips();
+}
+function onLangChange(){
+  populateRegions(document.getElementById("langSelect").value);
+  dismissWarning();
+}
+function onTextInput(){
+  const t=document.getElementById("textInput").value;
+  document.getElementById("charCount").textContent=t.length+" / 2000";
+  clearTimeout(debounceTimer);
+  if(t.trim().length<8){document.getElementById("detectBadge").style.display="none";return;}
+  debounceTimer=setTimeout(()=>autoDetect(t),700);
+}
+function autoDetect(text){
+  fetch("/detect-language",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})})
+    .then(r=>r.json()).then(d=>{
+      if(d.lang){
+        document.getElementById("detectLabel").textContent="Auto-detected: "+d.name;
+        document.getElementById("detectBadge").style.display="flex";
+        const sel=document.getElementById("langSelect");
+        if(sel.value!==d.lang&&document.querySelector(`#langSelect option[value="${d.lang}"]`)){
+          sel.value=d.lang; populateRegions(d.lang);
+        }
+      }
+    }).catch(()=>{});
+}
+async function synthesize(){
+  const text=document.getElementById("textInput").value.trim();
+  if(!text){setStatus("Please enter some text first.");return;}
+  setLoading(true); dismissWarning();
+  try{
+    const res=await fetch("/synthesize",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({text,language:document.getElementById("langSelect").value,gender:currentGender,style:document.getElementById("styleSelect").value})});
+    const data=await res.json();
+    if(data.warning){showWarning(data.message,data.detected);setLoading(false);return;}
+    currentAudioUrl=data.audio_url;
+    const p=document.getElementById("audioPlayer");
+    p.src=currentAudioUrl+"?t="+Date.now();
+    document.getElementById("voiceUsed").textContent=data.voice||"Neural voice";
+    document.getElementById("playerCard").style.display="block";
+    document.getElementById("downloadBtn").style.display="flex";
+    p.play(); setStatus("Audio ready — playing now.");
+  }catch(e){setStatus("Could not connect. Make sure Flask is running.");}
+  setLoading(false);
+}
+function showWarning(msg,detected){
+  pendingDetected=detected;
+  document.getElementById("warnMsg").textContent=msg;
+  document.getElementById("warnSwitch").textContent="Switch to "+(LANG_NAMES[detected]||detected);
+  document.getElementById("warningBox").style.display="block";
+}
+function dismissWarning(){document.getElementById("warningBox").style.display="none";}
+function switchToDetected(){
+  if(!pendingDetected)return;
+  if(document.querySelector(`#langSelect option[value="${pendingDetected}"]`)){
+    document.getElementById("langSelect").value=pendingDetected; populateRegions(pendingDetected);
+  }
+  dismissWarning(); synthesize();
+}
+function downloadAudio(){
+  const a=document.createElement("a"); a.href=currentAudioUrl; a.download="speech_"+Date.now()+".mp3"; a.click();
+}
+function setLoading(on){
+  const btn=document.getElementById("playBtn");
+  btn.disabled=on;
+  document.getElementById("spinner").style.display=on?"block":"none";
+  document.getElementById("playIcon").style.display=on?"none":"block";
+  document.getElementById("playLabel").textContent=on?"Converting…":"Convert & play";
+}
+function setStatus(m){document.getElementById("statusText").textContent=m;}
+
+populateRegions("en");
+</script>
+</body>
+</html>
