@@ -113,13 +113,46 @@ body {
   color: var(--dark);
 }
 
-/* ── PLATFORM BADGE (FB focused) ─────────────────────── */
-.platform-row {
+/* ── HIGHLIGHTED INPUT BOX (glow + pulse on focus) ─────────────── */
+.input-row {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 14px;
 }
 
+.highlight-input {
+  flex: 1;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.25s ease;
+  color: var(--dark);
+  background: var(--white);
+}
+
+.highlight-input:focus {
+  border-color: var(--fb-blue);
+  box-shadow: 0 0 0 4px rgba(24,119,242,0.2), 0 0 0 2px rgba(24,119,242,0.4);
+  background-color: #fff;
+  transform: scale(1.01);
+}
+
+.highlight-input:hover {
+  border-color: #9bbdf0;
+  background: #fefefe;
+}
+
+/* placeholder animation */
+.highlight-input:focus::placeholder {
+  opacity: 0.5;
+  transform: translateX(4px);
+  transition: all 0.2s;
+}
+
+/* ── PLATFORM BADGE ─────────────────────── */
 .platform-badge {
   display: inline-flex;
   align-items: center;
@@ -140,34 +173,7 @@ body {
   font-weight: 600;
 }
 
-/* ── INPUT ───────────────────────────────── */
-.input-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-
-input[type="text"] {
-  flex: 1;
-  padding: 12px 14px;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid var(--border);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-  outline: none;
-  transition: 0.2s;
-  color: var(--dark);
-  background: var(--white);
-}
-
-input[type="text"]:focus {
-  border-color: var(--fb-blue);
-  box-shadow: 0 0 0 3px rgba(24,119,242,0.1);
-}
-
-input[type="text"]::placeholder { color: #c0c4cc; }
-
-/* ── FORMAT SELECTOR (blue accents) ─────────────────────── */
+/* ── FORMAT SELECTOR ─────────────────────── */
 .format-row {
   display: flex;
   gap: 8px;
@@ -206,7 +212,7 @@ input[type="text"]::placeholder { color: #c0c4cc; }
   color: #7c3aed;
 }
 
-/* ── DOWNLOAD BUTTON (Facebook Blue) ─────────────────────── */
+/* ── DOWNLOAD BUTTON + PROCESSING STATE (waiting animation) ── */
 .dl-btn {
   width: 100%;
   padding: 13px;
@@ -222,11 +228,35 @@ input[type="text"]::placeholder { color: #c0c4cc; }
   letter-spacing: 0.2px;
   position: relative;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .dl-btn:hover { background: var(--fb-dark-blue); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(24,119,242,0.3); }
 .dl-btn:active { transform: translateY(0); }
-.dl-btn:disabled { background: #9bbdf0; cursor: not-allowed; transform: none; box-shadow: none; }
+.dl-btn:disabled { 
+  background: #9bbdf0; 
+  cursor: not-allowed; 
+  transform: none; 
+  box-shadow: none;
+  position: relative;
+  opacity: 0.9;
+}
+
+/* processing / waiting animation */
+.dl-btn.processing {
+  background: #0e63d0;
+  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.1) 0px, rgba(255,255,255,0.1) 20px, rgba(255,255,255,0.2) 20px, rgba(255,255,255,0.2) 40px);
+  animation: shimmer 1.2s infinite linear;
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  0% { background-position: 0 0; }
+  100% { background-position: 40px 0; }
+}
 
 /* ── PROGRESS ────────────────────────────── */
 .progress-wrap {
@@ -284,9 +314,6 @@ input[type="text"]::placeholder { color: #c0c4cc; }
   background: var(--light);
 }
 
-.files-table th:first-child { border-radius: 8px 0 0 8px; }
-.files-table th:last-child { border-radius: 0 8px 8px 0; }
-
 .files-table td {
   padding: 12px 12px;
   border-bottom: 1px solid #f3f4f6;
@@ -329,10 +356,11 @@ input[type="text"]::placeholder { color: #c0c4cc; }
 .timer.urgent { color: var(--fb-blue); font-weight: 700; }
 .timer.safe   { color: var(--green); }
 
+/* ── ACTION BUTTONS (download arrow icon) ── */
 .action-btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   padding: 6px 12px;
   border-radius: 6px;
   font-size: 12px;
@@ -341,13 +369,16 @@ input[type="text"]::placeholder { color: #c0c4cc; }
   border: none;
   transition: all 0.15s;
   text-decoration: none;
+  background: #eff6ff;
+  color: var(--fb-blue);
 }
 
 .action-btn.dl {
   background: #eef3ff;
   color: var(--fb-blue);
 }
-.action-btn.dl:hover { background: #dbeafe; }
+
+.action-btn.dl:hover { background: #dbeafe; transform: translateY(-1px); }
 
 .action-btn.del {
   background: #fff5f5;
@@ -356,6 +387,20 @@ input[type="text"]::placeholder { color: #c0c4cc; }
 .action-btn.del:hover { background: #fee2e2; }
 
 .actions-cell { display: flex; gap: 6px; align-items: center; }
+
+/* arrow icon for save button */
+.download-arrow-icon {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%231877f2' viewBox='0 0 24 24'%3E%3Cpath d='M12 16l4-5h-3V4h-2v7H8l4 5zM4 18v2h16v-2H4z'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.action-btn.dl .download-arrow-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%231877f2' viewBox='0 0 24 24'%3E%3Cpath d='M12 16l4-5h-3V4h-2v7H8l4 5zM4 18v2h16v-2H4z'/%3E%3C/svg%3E");
+}
 
 /* ── EMPTY STATE ─────────────────────────── */
 .empty-state {
@@ -388,20 +433,12 @@ input[type="text"]::placeholder { color: #c0c4cc; }
 .toast.success { background: #16a34a; }
 .toast.error   { background: #dc2626; }
 
-/* ── SIZE TEXT ───────────────────────────── */
-.size-text {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--gray);
-}
-
-/* ── DETECTED PLATFORM ───────────────────── */
+/* ── DETECTION ROW ───────────────────────── */
 .detect-row {
   margin-bottom: 12px;
   min-height: 22px;
 }
 
-/* ── REFRESH BTN ─────────────────────────── */
 .refresh-btn {
   display: inline-flex;
   align-items: center;
@@ -427,7 +464,6 @@ input[type="text"]::placeholder { color: #c0c4cc; }
   margin-bottom: 16px;
 }
 
-/* Facebook quote badge */
 .fb-hint {
   background: #eef3ff;
   font-size: 11px;
@@ -441,7 +477,6 @@ input[type="text"]::placeholder { color: #c0c4cc; }
 }
 </style>
 </head>
-
 <body>
 
 <!-- TOAST -->
@@ -453,7 +488,6 @@ input[type="text"]::placeholder { color: #c0c4cc; }
   <div class="header">
     <div class="logo-wrap">
       <div class="logo-icon">
-        <!-- Facebook inspired f logo inside -->
         <svg viewBox="0 0 24 24" width="22" height="22" fill="white">
           <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/>
         </svg>
@@ -470,12 +504,12 @@ input[type="text"]::placeholder { color: #c0c4cc; }
       <span class="card-title">Download Facebook Video or Audio</span>
     </div>
 
-    <!-- Platform detection display (Facebook focused) -->
+    <!-- Platform detection display -->
     <div class="detect-row" id="detectRow"></div>
 
-    <!-- URL Input -->
+    <!-- URL Input with HIGHLIGHT class (glow & focus effect) -->
     <div class="input-row">
-      <input type="text" id="urlInput" placeholder="Paste Facebook video URL (facebook.com/watch, fb.watch, etc…)" oninput="detectPlatform(this.value)" />
+      <input type="text" id="urlInput" class="highlight-input" placeholder="Paste Facebook video URL (facebook.com/watch, fb.watch, etc…)" oninput="detectPlatform(this.value)" />
     </div>
 
     <!-- Format selector -->
@@ -488,17 +522,17 @@ input[type="text"]::placeholder { color: #c0c4cc; }
       </button>
     </div>
 
-    <!-- Download button -->
+    <!-- Download button with processing state icon -->
     <button class="dl-btn" id="dlBtn" onclick="startDownload()">
       ⬇ Download from Facebook
     </button>
 
     <!-- Hint tip -->
     <div style="margin-top: 12px; text-align: center;">
-      <span class="fb-hint">📌 Supports public Facebook videos & reels</span>
+      <span class="fb-hint">📌 Supports public Facebook videos & reels — paste any link</span>
     </div>
 
-    <!-- Progress bar -->
+    <!-- Progress bar area -->
     <div class="progress-wrap" id="progressWrap">
       <div class="progress-label">
         <span id="progressStatus">Preparing download…</span>
@@ -522,7 +556,7 @@ input[type="text"]::placeholder { color: #c0c4cc; }
 
     <div class="files-wrap" id="filesWrap">
       <div class="empty-state">
-        <div class="empty-icon">📂</div>
+        <div class="empty-icon">📘</div>
         <p>No Facebook videos yet. Paste any public Facebook link & download!</p>
       </div>
     </div>
@@ -545,11 +579,9 @@ function selectFormat(fmt) {
 function detectPlatform(val) {
   const row = document.getElementById('detectRow');
   val = (val || '').toLowerCase();
-  // Facebook detection patterns
   if (val.includes('facebook.com') || val.includes('fb.watch') || val.includes('fb.com') || val.includes('fbvideo') || val.includes('facebook')) {
     row.innerHTML = `<span class="platform-badge fb-detected">📘 Facebook video detected — ready for download</span>`;
   } else if (val.includes('youtube.com') || val.includes('youtu.be')) {
-    // fallback warning: but we tell user we are facebook oriented
     row.innerHTML = `<span class="platform-badge" style="color:#f59e0b;border-color:#fde68a">⚠️ YouTube link detected. EmonBook focuses on Facebook video downloader.</span>`;
   } else if (val.length > 5) {
     row.innerHTML = `<span class="platform-badge" style="color:#6b7280;border-color:#e5e7eb">🔗 Paste Facebook URL for best results</span>`;
@@ -558,17 +590,30 @@ function detectPlatform(val) {
   }
 }
 
-// ── DOWNLOAD (Facebook API endpoint) ──────────────────────────
+// Show waiting/processing state on button
+function setButtonProcessing(isProcessing) {
+  const btn = document.getElementById('dlBtn');
+  if (isProcessing) {
+    btn.disabled = true;
+    btn.classList.add('processing');
+    btn.innerHTML = '⏳ Processing Facebook video ... <span style="font-size:14px;">⏻</span>';
+  } else {
+    btn.disabled = false;
+    btn.classList.remove('processing');
+    btn.innerHTML = '⬇ Download from Facebook';
+  }
+}
+
+// ── DOWNLOAD (Facebook API endpoint) with processing highlight ──
 async function startDownload() {
   const url = document.getElementById('urlInput').value.trim();
   if (!url) { showToast('Please paste a Facebook video URL', 'error'); return; }
 
   const taskId = Date.now().toString();
-  const btn = document.getElementById('dlBtn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Processing Facebook video…';
-
-  showProgress(0, 'Analyzing Facebook link…');
+  // highlight processing on button + disable
+  setButtonProcessing(true);
+  
+  showProgress(0, 'Connecting to Facebook video...');
 
   try {
     pollTimer = setInterval(() => pollProgress(taskId), 800);
@@ -586,15 +631,13 @@ async function startDownload() {
     if (data.error) {
       hideProgress();
       showToast(data.error, 'error');
-      btn.disabled = false;
-      btn.textContent = '⬇ Download from Facebook';
+      setButtonProcessing(false);
       return;
     }
 
-    setProgress(100, 'Done!', true);
+    setProgress(100, 'Complete!', true);
     showToast(`✓ Downloaded: ${data.title || 'Facebook video'}`, 'success');
-    btn.disabled = false;
-    btn.textContent = '⬇ Download from Facebook';
+    setButtonProcessing(false);
     document.getElementById('urlInput').value = '';
     document.getElementById('detectRow').innerHTML = '';
 
@@ -604,8 +647,7 @@ async function startDownload() {
     clearInterval(pollTimer);
     hideProgress();
     showToast('Server error. Make sure Flask backend is running', 'error');
-    btn.disabled = false;
-    btn.textContent = '⬇ Download from Facebook';
+    setButtonProcessing(false);
   }
 }
 
@@ -615,14 +657,15 @@ async function pollProgress(taskId) {
     const d = await res.json();
     if (d.percent !== undefined) {
       const pct = Math.round(d.percent);
-      const label = d.status === 'downloading' ? `Downloading video… ${pct}%` : d.status === 'finished' ? 'Converting & saving…' : 'Preparing Facebook stream…';
+      let label = d.status === 'downloading' ? `Downloading video… ${pct}%` : d.status === 'finished' ? 'Converting & saving...' : 'Preparing Facebook stream...';
       setProgress(pct, label, false);
     }
   } catch {}
 }
 
 function showProgress(pct, label) {
-  document.getElementById('progressWrap').style.display = 'block';
+  const wrap = document.getElementById('progressWrap');
+  wrap.style.display = 'block';
   setProgress(pct, label, false);
 }
 
@@ -638,7 +681,7 @@ function hideProgress() {
   document.getElementById('progressWrap').style.display = 'none';
 }
 
-// ── FILE LIST (showing Facebook metadata) ─────────────────────────
+// ── FILE LIST (with download arrow icon on save button) ──
 async function loadFiles() {
   try {
     const res = await fetch('/list-videos');
@@ -673,7 +716,6 @@ function renderFiles(files) {
     const secs = f.expires_in;
     const timerClass = secs < 30 ? 'urgent' : secs < 60 ? '' : 'safe';
     const timerText = secs > 0 ? `${secs}s` : 'Expired';
-    // platform display — always show FB as primary identity
     const platformTag = `<span class="tag fb">FB</span>`;
     const fmtTag = `<span class="tag ${f.format}">${f.format.toUpperCase()}</span>`;
 
@@ -684,7 +726,7 @@ function renderFiles(files) {
       <td><span class="timer ${timerClass}">⏱ ${timerText}</span></td>
       <td>
         <div class="actions-cell">
-          <a class="action-btn dl" href="${f.download_url}" download>💾 Save</a>
+          <a class="action-btn dl" href="${f.download_url}" download><span class="download-arrow-icon"></span> Save</a>
           <button class="action-btn del" onclick="deleteFile('${esc(f.file)}')">🗑 Delete</button>
         </div>
       </td>
@@ -731,14 +773,16 @@ function showToast(msg, type = '') {
 // ── AUTO REFRESH FILE LIST ─────────────
 setInterval(loadFiles, 10000);
 
-// ── INIT ──────────────────────────────
-loadFiles();
-
-// Optional: add placeholder prompt for Facebook focus
+// ── INIT & add extra highlight class to input on load ──
 window.addEventListener('DOMContentLoaded', () => {
-  const urlInput = document.getElementById('urlInput');
-  if(urlInput) {
-    urlInput.placeholder = "Paste Facebook video URL (example: https://facebook.com/watch?v=... or fb.watch/...)";
+  loadFiles();
+  const inputEl = document.getElementById('urlInput');
+  if (inputEl) {
+    inputEl.placeholder = "Paste Facebook video URL (https://facebook.com/watch?v=... or fb.watch/...)";
+    // additional glow effect on active
+    inputEl.addEventListener('focus', () => {
+      inputEl.style.transition = 'all 0.2s';
+    });
   }
 });
 </script>
