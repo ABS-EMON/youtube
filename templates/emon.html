@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>EMON — Video Downloader</title>
+<title>EMON — Facebook Video Downloader</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
 :root {
-  --red: #ff2d2d;
-  --blue: #1877f2;
+  --fb-blue: #1877f2;
+  --fb-dark-blue: #0e63d0;
+  --fb-light-bg: #f0f2f5;
   --green: #22c55e;
-  --orange: #f97316;
   --dark: #111827;
   --gray: #6b7280;
   --light: #f9fafb;
@@ -28,13 +28,13 @@
 
 body {
   font-family: 'DM Sans', sans-serif;
-  background: #f0f2f5;
+  background: var(--fb-light-bg);
   color: var(--dark);
   min-height: 100vh;
   padding: 24px 16px 60px;
 }
 
-/* ── HEADER ─────────────────────────────── */
+/* ── HEADER (Facebook Blue Theme) ─────────────────────────────── */
 .header {
   text-align: center;
   margin-bottom: 28px;
@@ -49,10 +49,10 @@ body {
 
 .logo-icon {
   width: 44px; height: 44px;
-  background: var(--red);
+  background: var(--fb-blue);
   border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 12px rgba(255,45,45,0.35);
+  box-shadow: 0 4px 12px rgba(24,119,242,0.35);
 }
 
 .logo-icon svg { width: 22px; height: 22px; fill: white; }
@@ -63,7 +63,7 @@ body {
   letter-spacing: -0.5px;
 }
 
-.logo-title span { color: var(--red); }
+.logo-title span { color: var(--fb-blue); }
 
 .header-sub {
   font-size: 13px;
@@ -104,8 +104,8 @@ body {
   font-size: 15px;
 }
 
-.card-icon.red { background: #fff0f0; }
-.card-icon.blue { background: #eff6ff; }
+.card-icon.blue-bg { background: #eef3ff; color: var(--fb-blue); }
+.card-icon.folder-bg { background: #eff6ff; }
 
 .card-title {
   font-size: 14px;
@@ -113,7 +113,7 @@ body {
   color: var(--dark);
 }
 
-/* ── PLATFORM BADGE ─────────────────────── */
+/* ── PLATFORM BADGE (FB focused) ─────────────────────── */
 .platform-row {
   display: flex;
   gap: 8px;
@@ -129,15 +129,16 @@ body {
   font-size: 12px;
   font-weight: 600;
   border: 2px solid transparent;
-  cursor: pointer;
-  transition: all 0.2s;
   background: var(--light);
   color: var(--gray);
 }
 
-.platform-badge.yt { border-color: #fecaca; color: #dc2626; }
-.platform-badge.fb { border-color: #bfdbfe; color: #2563eb; }
-.platform-badge.detected { background: #ecfdf5; color: #16a34a; border-color: #86efac; font-size: 11px; padding: 4px 10px; }
+.platform-badge.fb-detected {
+  background: #eef3ff;
+  color: var(--fb-blue);
+  border-color: #bfdbfe;
+  font-weight: 600;
+}
 
 /* ── INPUT ───────────────────────────────── */
 .input-row {
@@ -160,13 +161,13 @@ input[type="text"] {
 }
 
 input[type="text"]:focus {
-  border-color: var(--red);
-  box-shadow: 0 0 0 3px rgba(255,45,45,0.08);
+  border-color: var(--fb-blue);
+  box-shadow: 0 0 0 3px rgba(24,119,242,0.1);
 }
 
 input[type="text"]::placeholder { color: #c0c4cc; }
 
-/* ── FORMAT SELECTOR ─────────────────────── */
+/* ── FORMAT SELECTOR (blue accents) ─────────────────────── */
 .format-row {
   display: flex;
   gap: 8px;
@@ -194,9 +195,9 @@ input[type="text"]::placeholder { color: #c0c4cc; }
 .fmt-btn:hover { border-color: #d1d5db; color: var(--dark); }
 
 .fmt-btn.active.mp4 {
-  border-color: var(--red);
-  background: #fff5f5;
-  color: var(--red);
+  border-color: var(--fb-blue);
+  background: #eef3ff;
+  color: var(--fb-blue);
 }
 
 .fmt-btn.active.mp3 {
@@ -205,11 +206,11 @@ input[type="text"]::placeholder { color: #c0c4cc; }
   color: #7c3aed;
 }
 
-/* ── DOWNLOAD BUTTON ─────────────────────── */
+/* ── DOWNLOAD BUTTON (Facebook Blue) ─────────────────────── */
 .dl-btn {
   width: 100%;
   padding: 13px;
-  background: var(--red);
+  background: var(--fb-blue);
   color: white;
   border: none;
   border-radius: var(--radius-sm);
@@ -223,9 +224,9 @@ input[type="text"]::placeholder { color: #c0c4cc; }
   overflow: hidden;
 }
 
-.dl-btn:hover { background: #e01f1f; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(255,45,45,0.3); }
+.dl-btn:hover { background: var(--fb-dark-blue); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(24,119,242,0.3); }
 .dl-btn:active { transform: translateY(0); }
-.dl-btn:disabled { background: #fca5a5; cursor: not-allowed; transform: none; box-shadow: none; }
+.dl-btn:disabled { background: #9bbdf0; cursor: not-allowed; transform: none; box-shadow: none; }
 
 /* ── PROGRESS ────────────────────────────── */
 .progress-wrap {
@@ -251,7 +252,7 @@ input[type="text"]::placeholder { color: #c0c4cc; }
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, var(--red), #ff6b35);
+  background: linear-gradient(90deg, var(--fb-blue), #4690e6);
   border-radius: 99px;
   width: 0%;
   transition: width 0.4s ease;
@@ -315,18 +316,17 @@ input[type="text"]::placeholder { color: #c0c4cc; }
   letter-spacing: 0.4px;
 }
 
-.tag.mp4 { background: #fee2e2; color: #dc2626; }
+.tag.mp4 { background: #eef3ff; color: var(--fb-blue); }
 .tag.mp3 { background: #ede9fe; color: #7c3aed; }
-.tag.yt  { background: #fee2e2; color: #dc2626; }
-.tag.fb  { background: #dbeafe; color: #2563eb; }
+.tag.fb  { background: #eef3ff; color: var(--fb-blue); font-weight: 700; }
 
 .timer {
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
-  color: var(--orange);
+  color: var(--fb-blue);
 }
 
-.timer.urgent { color: var(--red); }
+.timer.urgent { color: var(--fb-blue); font-weight: 700; }
 .timer.safe   { color: var(--green); }
 
 .action-btn {
@@ -344,8 +344,8 @@ input[type="text"]::placeholder { color: #c0c4cc; }
 }
 
 .action-btn.dl {
-  background: #eff6ff;
-  color: #2563eb;
+  background: #eef3ff;
+  color: var(--fb-blue);
 }
 .action-btn.dl:hover { background: #dbeafe; }
 
@@ -426,6 +426,19 @@ input[type="text"]::placeholder { color: #c0c4cc; }
   justify-content: space-between;
   margin-bottom: 16px;
 }
+
+/* Facebook quote badge */
+.fb-hint {
+  background: #eef3ff;
+  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fb-blue);
+  margin-top: 6px;
+}
 </style>
 </head>
 
@@ -436,36 +449,39 @@ input[type="text"]::placeholder { color: #c0c4cc; }
 
 <div class="main">
 
-  <!-- HEADER -->
+  <!-- HEADER with Facebook identity -->
   <div class="header">
     <div class="logo-wrap">
       <div class="logo-icon">
-        <svg viewBox="0 0 24 24"><path d="M8 6.82v10.36c0 .79.87 1.27 1.54.84l8.14-5.18a1 1 0 000-1.69L9.54 5.98A1 1 0 008 6.82z"/></svg>
+        <!-- Facebook inspired f logo inside -->
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="white">
+          <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/>
+        </svg>
       </div>
-      <div class="logo-title">Emon<span>Tube</span></div>
+      <div class="logo-title">Emon<span>Book</span></div>
     </div>
-    <div class="header-sub">Download YouTube & Facebook videos instantly</div>
+    <div class="header-sub">Facebook video downloader — HD & audio in seconds</div>
   </div>
 
   <!-- DOWNLOADER CARD -->
   <div class="card">
     <div class="card-header">
-      <div class="card-icon red">⬇️</div>
-      <span class="card-title">Download Video or Audio</span>
+      <div class="card-icon blue-bg">📱</div>
+      <span class="card-title">Download Facebook Video or Audio</span>
     </div>
 
-    <!-- Platform detection display -->
+    <!-- Platform detection display (Facebook focused) -->
     <div class="detect-row" id="detectRow"></div>
 
     <!-- URL Input -->
     <div class="input-row">
-      <input type="text" id="urlInput" placeholder="Paste YouTube or Facebook video URL…" oninput="detectPlatform(this.value)" />
+      <input type="text" id="urlInput" placeholder="Paste Facebook video URL (facebook.com/watch, fb.watch, etc…)" oninput="detectPlatform(this.value)" />
     </div>
 
     <!-- Format selector -->
     <div class="format-row">
       <button class="fmt-btn active mp4" id="fmtMp4" onclick="selectFormat('mp4')">
-        🎬 MP4 Video
+        🎬 MP4 Video (HD)
       </button>
       <button class="fmt-btn mp3" id="fmtMp3" onclick="selectFormat('mp3')">
         🎵 MP3 Audio
@@ -474,8 +490,13 @@ input[type="text"]::placeholder { color: #c0c4cc; }
 
     <!-- Download button -->
     <button class="dl-btn" id="dlBtn" onclick="startDownload()">
-      ⬇ Download Now
+      ⬇ Download from Facebook
     </button>
+
+    <!-- Hint tip -->
+    <div style="margin-top: 12px; text-align: center;">
+      <span class="fb-hint">📌 Supports public Facebook videos & reels</span>
+    </div>
 
     <!-- Progress bar -->
     <div class="progress-wrap" id="progressWrap">
@@ -493,8 +514,8 @@ input[type="text"]::placeholder { color: #c0c4cc; }
   <div class="card">
     <div class="between-row">
       <div class="card-header" style="margin-bottom:0">
-        <div class="card-icon blue">📁</div>
-        <span class="card-title">Downloaded Files</span>
+        <div class="card-icon folder-bg">📁</div>
+        <span class="card-title">Your Facebook Downloads</span>
       </div>
       <button class="refresh-btn" onclick="loadFiles()">↻ Refresh</button>
     </div>
@@ -502,7 +523,7 @@ input[type="text"]::placeholder { color: #c0c4cc; }
     <div class="files-wrap" id="filesWrap">
       <div class="empty-state">
         <div class="empty-icon">📂</div>
-        <p>No files yet. Download something above!</p>
+        <p>No Facebook videos yet. Paste any public Facebook link & download!</p>
       </div>
     </div>
   </div>
@@ -520,35 +541,36 @@ function selectFormat(fmt) {
   document.getElementById('fmtMp3').className = 'fmt-btn' + (fmt === 'mp3' ? ' active mp3' : '');
 }
 
-// ── PLATFORM DETECTION ────────────────
+// ── PLATFORM DETECTION (Facebook prioritized) ────────────────
 function detectPlatform(val) {
   const row = document.getElementById('detectRow');
   val = (val || '').toLowerCase();
-  if (val.includes('youtube.com') || val.includes('youtu.be')) {
-    row.innerHTML = `<span class="platform-badge yt">▶ YouTube detected</span>`;
-  } else if (val.includes('facebook.com') || val.includes('fb.watch') || val.includes('fb.com')) {
-    row.innerHTML = `<span class="platform-badge fb">f Facebook detected</span>`;
+  // Facebook detection patterns
+  if (val.includes('facebook.com') || val.includes('fb.watch') || val.includes('fb.com') || val.includes('fbvideo') || val.includes('facebook')) {
+    row.innerHTML = `<span class="platform-badge fb-detected">📘 Facebook video detected — ready for download</span>`;
+  } else if (val.includes('youtube.com') || val.includes('youtu.be')) {
+    // fallback warning: but we tell user we are facebook oriented
+    row.innerHTML = `<span class="platform-badge" style="color:#f59e0b;border-color:#fde68a">⚠️ YouTube link detected. EmonBook focuses on Facebook video downloader.</span>`;
   } else if (val.length > 5) {
-    row.innerHTML = `<span class="platform-badge" style="color:#f59e0b;border-color:#fde68a">⚠ Unknown platform</span>`;
+    row.innerHTML = `<span class="platform-badge" style="color:#6b7280;border-color:#e5e7eb">🔗 Paste Facebook URL for best results</span>`;
   } else {
     row.innerHTML = '';
   }
 }
 
-// ── DOWNLOAD ──────────────────────────
+// ── DOWNLOAD (Facebook API endpoint) ──────────────────────────
 async function startDownload() {
   const url = document.getElementById('urlInput').value.trim();
-  if (!url) { showToast('Please paste a video URL', 'error'); return; }
+  if (!url) { showToast('Please paste a Facebook video URL', 'error'); return; }
 
   const taskId = Date.now().toString();
   const btn = document.getElementById('dlBtn');
   btn.disabled = true;
-  btn.textContent = '⏳ Starting…';
+  btn.textContent = '⏳ Processing Facebook video…';
 
-  showProgress(0, 'Connecting…');
+  showProgress(0, 'Analyzing Facebook link…');
 
   try {
-    // Start polling
     pollTimer = setInterval(() => pollProgress(taskId), 800);
 
     const res = await fetch('/download', {
@@ -565,14 +587,14 @@ async function startDownload() {
       hideProgress();
       showToast(data.error, 'error');
       btn.disabled = false;
-      btn.textContent = '⬇ Download Now';
+      btn.textContent = '⬇ Download from Facebook';
       return;
     }
 
     setProgress(100, 'Done!', true);
-    showToast(`Downloaded: ${data.title}`, 'success');
+    showToast(`✓ Downloaded: ${data.title || 'Facebook video'}`, 'success');
     btn.disabled = false;
-    btn.textContent = '⬇ Download Now';
+    btn.textContent = '⬇ Download from Facebook';
     document.getElementById('urlInput').value = '';
     document.getElementById('detectRow').innerHTML = '';
 
@@ -581,9 +603,9 @@ async function startDownload() {
   } catch (e) {
     clearInterval(pollTimer);
     hideProgress();
-    showToast('Server error. Is Flask running?', 'error');
+    showToast('Server error. Make sure Flask backend is running', 'error');
     btn.disabled = false;
-    btn.textContent = '⬇ Download Now';
+    btn.textContent = '⬇ Download from Facebook';
   }
 }
 
@@ -593,7 +615,7 @@ async function pollProgress(taskId) {
     const d = await res.json();
     if (d.percent !== undefined) {
       const pct = Math.round(d.percent);
-      const label = d.status === 'downloading' ? `Downloading… ${pct}%` : d.status === 'finished' ? 'Processing…' : 'Preparing…';
+      const label = d.status === 'downloading' ? `Downloading video… ${pct}%` : d.status === 'finished' ? 'Converting & saving…' : 'Preparing Facebook stream…';
       setProgress(pct, label, false);
     }
   } catch {}
@@ -616,14 +638,14 @@ function hideProgress() {
   document.getElementById('progressWrap').style.display = 'none';
 }
 
-// ── FILE LIST ─────────────────────────
+// ── FILE LIST (showing Facebook metadata) ─────────────────────────
 async function loadFiles() {
   try {
     const res = await fetch('/list-videos');
     const data = await res.json();
     renderFiles(data.files || []);
   } catch {
-    document.getElementById('filesWrap').innerHTML = `<div class="empty-state"><p>Could not load files.</p></div>`;
+    document.getElementById('filesWrap').innerHTML = `<div class="empty-state"><p>⚠️ Could not load files. Ensure backend is active.</p></div>`;
   }
 }
 
@@ -631,7 +653,7 @@ function renderFiles(files) {
   const wrap = document.getElementById('filesWrap');
 
   if (!files.length) {
-    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">📂</div><p>No files yet. Download something above!</p></div>`;
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">📘</div><p>No Facebook downloads yet. Grab any public Facebook video above!</p></div>`;
     return;
   }
 
@@ -651,7 +673,8 @@ function renderFiles(files) {
     const secs = f.expires_in;
     const timerClass = secs < 30 ? 'urgent' : secs < 60 ? '' : 'safe';
     const timerText = secs > 0 ? `${secs}s` : 'Expired';
-    const platformTag = `<span class="tag ${f.platform === 'youtube' ? 'yt' : 'fb'}">${f.platform === 'youtube' ? 'YT' : 'FB'}</span>`;
+    // platform display — always show FB as primary identity
+    const platformTag = `<span class="tag fb">FB</span>`;
     const fmtTag = `<span class="tag ${f.format}">${f.format.toUpperCase()}</span>`;
 
     html += `<tr>
@@ -661,7 +684,7 @@ function renderFiles(files) {
       <td><span class="timer ${timerClass}">⏱ ${timerText}</span></td>
       <td>
         <div class="actions-cell">
-          <a class="action-btn dl" href="${f.download_url}" download>⬇ Save</a>
+          <a class="action-btn dl" href="${f.download_url}" download>💾 Save</a>
           <button class="action-btn del" onclick="deleteFile('${esc(f.file)}')">🗑 Delete</button>
         </div>
       </td>
@@ -685,7 +708,7 @@ async function deleteFile(filename) {
     });
     const d = await res.json();
     if (d.success) {
-      showToast('File deleted', 'success');
+      showToast('🗑 File removed', 'success');
       loadFiles();
     } else {
       showToast(d.error || 'Delete failed', 'error');
@@ -706,11 +729,18 @@ function showToast(msg, type = '') {
 }
 
 // ── AUTO REFRESH FILE LIST ─────────────
-setInterval(loadFiles, 10000); // refresh every 10s
+setInterval(loadFiles, 10000);
 
 // ── INIT ──────────────────────────────
 loadFiles();
-</script>
 
+// Optional: add placeholder prompt for Facebook focus
+window.addEventListener('DOMContentLoaded', () => {
+  const urlInput = document.getElementById('urlInput');
+  if(urlInput) {
+    urlInput.placeholder = "Paste Facebook video URL (example: https://facebook.com/watch?v=... or fb.watch/...)";
+  }
+});
+</script>
 </body>
 </html>
