@@ -9,6 +9,10 @@ app = Flask(__name__)
 DOWNLOAD_FOLDER = "downloads"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
+# Cookies file — place cookies.txt in project root (same folder as emon.py)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+COOKIES_FILE = os.path.join(BASE_DIR, "cookies.txt")
+
 # Track download progress per task
 progress_store = {}
 
@@ -50,6 +54,57 @@ def detect_platform(url):
 
 
 # =========================
+# BUILD YDL OPTS
+# =========================
+def build_ydl_opts(fmt, file_path, progress_hook, platform):
+    base = {
+        'quiet': True,
+        'noplaylist': True,
+        'progress_hooks': [progress_hook],
+        'socket_timeout': 30,
+        'retries': 5,
+        'http_headers': {
+            'User-Agent': (
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                'AppleWebKit/537.36 (KHTML, like Gecko) '
+                'Chrome/124.0.0.0 Safari/537.36'
+            )
+        },
+    }
+
+    # ── YouTube specific ──────────────────────────────────────
+    if platform == "youtube":
+        # Always attach cookies if file exists
+        if os.path.exists(COOKIES_FILE):
+            base['cookiefile'] = COOKIES_FILE
+            print(f"[COOKIES] Loaded: {COOKIES_FILE}")
+        else:
+            print(f"[COOKIES] WARNING: cookies.txt not found at {COOKIES_FILE}")
+
+        base['extractor_args'] = {
+            'youtube': {
+                # tv_embedded is least-restricted on server IPs
+                'player_client': ['tv_embedded', 'web', 'mweb'],
+            }
+        }
+
+    # ── Format ───────────────────────────────────────────────
+    if fmt == "mp3":
+        base['format'] = 'bestaudio/best'
+        base['outtmpl'] = file_path.replace('.mp3', '.%(ext)s')
+        base['postprocessors'] = [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }]
+    else:
+        base['format'] = 'best[ext=mp4]/best[ext=webm]/best'
+        base['outtmpl'] = file_path
+
+    return base
+
+
+# =========================
 # DOWNLOAD VIDEO/AUDIO
 # =========================
 @app.route('/download', methods=['POST'])
@@ -57,7 +112,7 @@ def download():
     try:
         data = request.get_json(force=True)
         url = data.get("url")
-        fmt = data.get("format", "mp4")   # "mp4" or "mp3"
+        fmt = data.get("format", "mp4")
         task_id = data.get("task_id", str(int(time.time())))
 
         if not url:
@@ -78,60 +133,30 @@ def download():
             if d['status'] == 'downloading':
                 pct = d.get('_percent_str', '0%').strip().replace('%', '')
                 try:
-                    progress_store[task_id] = {"percent": float(pct), "status": "downloading"}
-                except:
+                    progress_store[task_id] = {
+                        "percent": float(pct),
+                        "status": "downloading"
+                    }
+                except Exception:
                     pass
             elif d['status'] == 'finished':
                 progress_store[task_id] = {"percent": 100, "status": "finished"}
 
-        if fmt == "mp3":
-            ydl_opts = {
-                'format': 'bestaudio/best',
-                'outtmpl': file_path.replace('.mp3', '.%(ext)s'),
-                'quiet': True,
-                'noplaylist': True,
-                'progress_hooks': [progress_hook],
-                'postprocessors': [{
-                    'key': 'FFmpegExtractAudio',
-                    'preferredcodec': 'mp3',
-                    'preferredquality': '192',
-                }],
-                'extractor_args': {
-                    'youtube': {
-                    'player_client': ['tv_embedded', 'mweb'],
-        }
-    },
-            }
-        else:
-            ydl_opts = {
-                'format': 'best[ext=mp4]/best',
-                'outtmpl': file_path,
-                'quiet': True,
-                'noplaylist': True,
-                'progress_hooks': [progress_hook],
-                'extractor_args': {
-                    'youtube': {
-                        'player_client': ['tv_embedded', 'mweb'],
-        }
-    },
-            }
-
-        
+        ydl_opts = build_ydl_opts(fmt, file_path, progress_hook, platform)
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             title = info.get("title", "Video")
 
-        # If mp3, yt-dlp may rename file
+        # mp3: yt-dlp renames the output — find the actual .mp3 file
         if fmt == "mp3":
-            expected = file_path.replace('.mp3', '')
             for f in os.listdir(DOWNLOAD_FOLDER):
                 if f.startswith(f"video_{task_id}") and f.endswith(".mp3"):
                     file_path = os.path.join(DOWNLOAD_FOLDER, f)
                     safe_name = f
                     break
 
-        # Store metadata alongside file
+        # Write metadata sidecar
         meta_path = os.path.join(DOWNLOAD_FOLDER, f"video_{task_id}.meta")
         with open(meta_path, 'w', encoding='utf-8') as mf:
             mf.write(f"{title}\n{safe_name}\n{fmt}\n{platform}\n{time.time()}")
@@ -178,11 +203,11 @@ def list_videos():
                 meta_path = os.path.join(DOWNLOAD_FOLDER, f)
                 with open(meta_path, 'r', encoding='utf-8') as mf:
                     lines = mf.read().splitlines()
-                title = lines[0] if len(lines) > 0 else "Unknown"
+                title    = lines[0] if len(lines) > 0 else "Unknown"
                 safe_name = lines[1] if len(lines) > 1 else ""
-                fmt = lines[2] if len(lines) > 2 else "mp4"
+                fmt      = lines[2] if len(lines) > 2 else "mp4"
                 platform = lines[3] if len(lines) > 3 else "unknown"
-                ts = float(lines[4]) if len(lines) > 4 else 0
+                ts       = float(lines[4]) if len(lines) > 4 else 0
 
                 file_path = os.path.join(DOWNLOAD_FOLDER, safe_name)
                 if os.path.exists(file_path):
@@ -193,7 +218,7 @@ def list_videos():
                         "file": safe_name,
                         "format": fmt,
                         "platform": platform,
-                        "size_mb": round(size / (1024*1024), 2),
+                        "size_mb": round(size / (1024 * 1024), 2),
                         "expires_in": expires_in,
                         "download_url": f"/get-video?file={safe_name}"
                     })
