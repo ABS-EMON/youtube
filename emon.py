@@ -33,7 +33,7 @@ def delete_file_after_delay(path, delay=120):
 # =========================
 @app.route('/')
 def home():
-    return render_template("emons.html")
+    return render_template("emon.html")
 
 
 # =========================
