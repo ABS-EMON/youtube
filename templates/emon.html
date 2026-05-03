@@ -17,6 +17,7 @@
   --light: #f9fafb;
   --border: #e5e7eb;
   --white: #ffffff;
+  --red-error: #dc2626;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --shadow-md: 0 4px 20px rgba(0,0,0,0.08);
   --shadow-lg: 0 10px 40px rgba(0,0,0,0.12);
@@ -113,16 +114,22 @@ body {
   color: var(--dark);
 }
 
-/* ── HIGHLIGHTED INPUT BOX (glow + pulse on focus) ─────────────── */
+/* ── HIGHLIGHTED INPUT BOX with validation states ─────────────── */
+.input-wrapper {
+  position: relative;
+  margin-bottom: 14px;
+}
+
 .input-row {
   display: flex;
   gap: 10px;
-  margin-bottom: 14px;
+  align-items: center;
+  position: relative;
 }
 
 .highlight-input {
   flex: 1;
-  padding: 12px 14px;
+  padding: 12px 40px 12px 14px;
   border-radius: var(--radius-sm);
   border: 2px solid var(--border);
   font-family: 'DM Sans', sans-serif;
@@ -137,19 +144,60 @@ body {
   border-color: var(--fb-blue);
   box-shadow: 0 0 0 4px rgba(24,119,242,0.2), 0 0 0 2px rgba(24,119,242,0.4);
   background-color: #fff;
-  transform: scale(1.01);
 }
 
-.highlight-input:hover {
-  border-color: #9bbdf0;
-  background: #fefefe;
+.highlight-input.valid-input {
+  border-color: var(--green);
+  background-color: #f0fdf4;
+  padding-right: 40px;
 }
 
-/* placeholder animation */
-.highlight-input:focus::placeholder {
-  opacity: 0.5;
-  transform: translateX(4px);
-  transition: all 0.2s;
+.highlight-input.invalid-input {
+  border-color: var(--red-error);
+  background-color: #fef2f2;
+  padding-right: 40px;
+}
+
+.highlight-input.valid-input:focus {
+  box-shadow: 0 0 0 4px rgba(34,197,94,0.2);
+  border-color: var(--green);
+}
+
+.highlight-input.invalid-input:focus {
+  box-shadow: 0 0 0 4px rgba(220,38,38,0.2);
+  border-color: var(--red-error);
+}
+
+/* Input status icons */
+.input-status {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  pointer-events: none;
+}
+
+.input-status.valid-icon { color: var(--green); }
+.input-status.invalid-icon { color: var(--red-error); }
+
+/* validation message */
+.validation-message {
+  font-size: 11px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  padding-left: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.validation-message.error-msg {
+  color: var(--red-error);
+}
+
+.validation-message.success-msg {
+  color: var(--green);
 }
 
 /* ── PLATFORM BADGE ─────────────────────── */
@@ -171,6 +219,12 @@ body {
   color: var(--fb-blue);
   border-color: #bfdbfe;
   font-weight: 600;
+}
+
+.platform-badge.error-badge {
+  background: #fef2f2;
+  color: var(--red-error);
+  border-color: #fecaca;
 }
 
 /* ── FORMAT SELECTOR ─────────────────────── */
@@ -212,7 +266,7 @@ body {
   color: #7c3aed;
 }
 
-/* ── DOWNLOAD BUTTON + PROCESSING STATE (waiting animation) ── */
+/* ── DOWNLOAD BUTTON + PROCESSING STATE ── */
 .dl-btn {
   width: 100%;
   padding: 13px;
@@ -234,23 +288,20 @@ body {
   gap: 8px;
 }
 
-.dl-btn:hover { background: var(--fb-dark-blue); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(24,119,242,0.3); }
-.dl-btn:active { transform: translateY(0); }
+.dl-btn:hover:not(:disabled) { background: var(--fb-dark-blue); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(24,119,242,0.3); }
+.dl-btn:active:not(:disabled) { transform: translateY(0); }
 .dl-btn:disabled { 
   background: #9bbdf0; 
   cursor: not-allowed; 
   transform: none; 
   box-shadow: none;
-  position: relative;
   opacity: 0.9;
 }
 
-/* processing / waiting animation */
 .dl-btn.processing {
   background: #0e63d0;
   background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.1) 0px, rgba(255,255,255,0.1) 20px, rgba(255,255,255,0.2) 20px, rgba(255,255,255,0.2) 40px);
   animation: shimmer 1.2s infinite linear;
-  pointer-events: none;
 }
 
 @keyframes shimmer {
@@ -293,7 +344,6 @@ body {
 /* ── FILES TABLE ─────────────────────────── */
 .files-wrap {
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .files-table {
@@ -356,7 +406,6 @@ body {
 .timer.urgent { color: var(--fb-blue); font-weight: 700; }
 .timer.safe   { color: var(--green); }
 
-/* ── ACTION BUTTONS (download arrow icon) ── */
 .action-btn {
   display: inline-flex;
   align-items: center;
@@ -373,22 +422,13 @@ body {
   color: var(--fb-blue);
 }
 
-.action-btn.dl {
-  background: #eef3ff;
-  color: var(--fb-blue);
-}
-
+.action-btn.dl { background: #eef3ff; color: var(--fb-blue); }
 .action-btn.dl:hover { background: #dbeafe; transform: translateY(-1px); }
-
-.action-btn.del {
-  background: #fff5f5;
-  color: #ef4444;
-}
+.action-btn.del { background: #fff5f5; color: #ef4444; }
 .action-btn.del:hover { background: #fee2e2; }
 
 .actions-cell { display: flex; gap: 6px; align-items: center; }
 
-/* arrow icon for save button */
 .download-arrow-icon {
   display: inline-block;
   width: 14px;
@@ -398,11 +438,6 @@ body {
   background-repeat: no-repeat;
 }
 
-.action-btn.dl .download-arrow-icon {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%231877f2' viewBox='0 0 24 24'%3E%3Cpath d='M12 16l4-5h-3V4h-2v7H8l4 5zM4 18v2h16v-2H4z'/%3E%3C/svg%3E");
-}
-
-/* ── EMPTY STATE ─────────────────────────── */
 .empty-state {
   text-align: center;
   padding: 36px 0;
@@ -410,9 +445,7 @@ body {
 }
 
 .empty-state .empty-icon { font-size: 36px; margin-bottom: 10px; }
-.empty-state p { font-size: 13px; }
 
-/* ── TOAST ───────────────────────────────── */
 .toast {
   position: fixed;
   bottom: 24px;
@@ -433,12 +466,7 @@ body {
 .toast.success { background: #16a34a; }
 .toast.error   { background: #dc2626; }
 
-/* ── DETECTION ROW ───────────────────────── */
-.detect-row {
-  margin-bottom: 12px;
-  min-height: 22px;
-}
-
+.detect-row { margin-bottom: 12px; min-height: 22px; }
 .refresh-btn {
   display: inline-flex;
   align-items: center;
@@ -454,37 +482,16 @@ body {
   transition: all 0.15s;
   font-family: 'DM Sans', sans-serif;
 }
-
 .refresh-btn:hover { border-color: #d1d5db; color: var(--dark); background: var(--light); }
-
-.between-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.fb-hint {
-  background: #eef3ff;
-  font-size: 11px;
-  padding: 6px 12px;
-  border-radius: 20px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--fb-blue);
-  margin-top: 6px;
-}
+.between-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.fb-hint { background: #eef3ff; font-size: 11px; padding: 6px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; color: var(--fb-blue); margin-top: 6px; }
 </style>
 </head>
 <body>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <div class="main">
-
-  <!-- HEADER with Facebook identity -->
   <div class="header">
     <div class="logo-wrap">
       <div class="logo-icon">
@@ -492,47 +499,39 @@ body {
           <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/>
         </svg>
       </div>
-      <div class="logo-title">ABS<span>EMON</span></div>
+      <div class="logo-title">ABS <span>EMON</span></div>
     </div>
     <div class="header-sub">Facebook video downloader — HD & audio in seconds</div>
   </div>
 
-  <!-- DOWNLOADER CARD -->
   <div class="card">
     <div class="card-header">
       <div class="card-icon blue-bg">📱</div>
       <span class="card-title">Download Facebook Video or Audio</span>
     </div>
 
-    <!-- Platform detection display -->
     <div class="detect-row" id="detectRow"></div>
 
-    <!-- URL Input with HIGHLIGHT class (glow & focus effect) -->
-    <div class="input-row">
-      <input type="text" id="urlInput" class="highlight-input" placeholder="Paste Facebook video URL (facebook.com/watch, fb.watch, etc…)" oninput="detectPlatform(this.value)" />
+    <!-- INPUT with validation checker -->
+    <div class="input-wrapper">
+      <div class="input-row">
+        <input type="text" id="urlInput" class="highlight-input" placeholder="Paste Facebook video URL (facebook.com/watch, fb.watch, etc…)" oninput="validateAndCheckPlatform(this.value)" />
+        <span id="inputStatusIcon" class="input-status"></span>
+      </div>
+      <div id="validationMsg" class="validation-message"></div>
     </div>
 
-    <!-- Format selector -->
     <div class="format-row">
-      <button class="fmt-btn active mp4" id="fmtMp4" onclick="selectFormat('mp4')">
-        🎬 MP4 Video (HD)
-      </button>
-      <button class="fmt-btn mp3" id="fmtMp3" onclick="selectFormat('mp3')">
-        🎵 MP3 Audio
-      </button>
+      <button class="fmt-btn active mp4" id="fmtMp4" onclick="selectFormat('mp4')">🎬 MP4 Video (HD)</button>
+      <button class="fmt-btn mp3" id="fmtMp3" onclick="selectFormat('mp3')">🎵 MP3 Audio</button>
     </div>
 
-    <!-- Download button with processing state icon -->
-    <button class="dl-btn" id="dlBtn" onclick="startDownload()">
-      ⬇ Download from Facebook
-    </button>
+    <button class="dl-btn" id="dlBtn" onclick="startDownload()">⬇ Download from Facebook</button>
 
-    <!-- Hint tip -->
     <div style="margin-top: 12px; text-align: center;">
-      <span class="fb-hint">📌 Supports public Facebook videos & reels — paste any link</span>
+      <span class="fb-hint">📌 Only Facebook videos are supported. Other platforms will be rejected.</span>
     </div>
 
-    <!-- Progress bar area -->
     <div class="progress-wrap" id="progressWrap">
       <div class="progress-label">
         <span id="progressStatus">Preparing download…</span>
@@ -544,7 +543,6 @@ body {
     </div>
   </div>
 
-  <!-- STORED FILES CARD -->
   <div class="card">
     <div class="between-row">
       <div class="card-header" style="margin-bottom:0">
@@ -553,44 +551,93 @@ body {
       </div>
       <button class="refresh-btn" onclick="loadFiles()">↻ Refresh</button>
     </div>
-
     <div class="files-wrap" id="filesWrap">
-      <div class="empty-state">
-        <div class="empty-icon">📘</div>
-        <p>No Facebook videos yet. Paste any public Facebook link & download!</p>
-      </div>
+      <div class="empty-state"><div class="empty-icon">📘</div><p>No Facebook videos yet. Paste any public Facebook link & download!</p></div>
     </div>
   </div>
-
 </div>
 
 <script>
 let selectedFormat = 'mp4';
 let pollTimer = null;
 
-// ── FORMAT SELECTOR ──────────────────
+// ── FACEBOOK URL VALIDATOR (strict checker) ──────────────────────
+function isFacebookUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  const lowerUrl = url.trim().toLowerCase();
+  // patterns for facebook domains and paths
+  const fbPatterns = [
+    /^https?:\/\/(www\.)?facebook\.com\/.*/i,
+    /^https?:\/\/(www\.)?fb\.watch\/.*/i,
+    /^https?:\/\/(www\.)?fb\.com\/.*/i,
+    /^https?:\/\/(?:m|mobile)\.facebook\.com\/.*/i,
+    /^https?:\/\/fb\.watch\/[a-zA-Z0-9]+/i,
+    /facebook\.com\/watch/i,
+    /facebook\.com\/reel/i,
+    /facebook\.com\/[0-9]+\/videos/i,
+    /fb\.watch\/[a-zA-Z0-9]+/i
+  ];
+  return fbPatterns.some(pattern => pattern.test(lowerUrl));
+}
+
+// ── VALIDATION & UI UPDATE (real-time checker) ───────────────────
+function validateAndCheckPlatform(val) {
+  const inputEl = document.getElementById('urlInput');
+  const statusIcon = document.getElementById('inputStatusIcon');
+  const validationMsgDiv = document.getElementById('validationMsg');
+  const detectRow = document.getElementById('detectRow');
+  
+  if (!val || val.trim() === '') {
+    inputEl.classList.remove('valid-input', 'invalid-input');
+    statusIcon.innerHTML = '';
+    validationMsgDiv.innerHTML = '';
+    detectRow.innerHTML = '';
+    return;
+  }
+  
+  const isValid = isFacebookUrl(val);
+  
+  if (isValid) {
+    inputEl.classList.remove('invalid-input');
+    inputEl.classList.add('valid-input');
+    statusIcon.innerHTML = '✓';
+    statusIcon.className = 'input-status valid-icon';
+    validationMsgDiv.innerHTML = '<span style="color:#16a34a">✓ Facebook video link verified</span>';
+    validationMsgDiv.className = 'validation-message success-msg';
+    detectRow.innerHTML = `<span class="platform-badge fb-detected">📘 Facebook video detected — ready for download</span>`;
+  } else {
+    inputEl.classList.remove('valid-input');
+    inputEl.classList.add('invalid-input');
+    statusIcon.innerHTML = '✗';
+    statusIcon.className = 'input-status invalid-icon';
+    validationMsgDiv.innerHTML = '<span>❌ Only Facebook video links are allowed. Please paste a valid Facebook URL (facebook.com/watch, fb.watch, etc.)</span>';
+    validationMsgDiv.className = 'validation-message error-msg';
+    
+    // custom badge for wrong platform
+    if (val.includes('youtube.com') || val.includes('youtu.be')) {
+      detectRow.innerHTML = `<span class="platform-badge error-badge">⚠️ YouTube link detected — This tool only supports Facebook videos</span>`;
+    } else if (val.includes('instagram.com')) {
+      detectRow.innerHTML = `<span class="platform-badge error-badge">⚠️ Instagram link detected — Only Facebook videos are allowed</span>`;
+    } else if (val.includes('twitter.com') || val.includes('x.com')) {
+      detectRow.innerHTML = `<span class="platform-badge error-badge">⚠️ Twitter/X link detected — Please use a Facebook video URL</span>`;
+    } else if (val.includes('tiktok.com')) {
+      detectRow.innerHTML = `<span class="platform-badge error-badge">⚠️ TikTok link detected — This downloader works only with Facebook videos</span>`;
+    } else if (val.length > 10 && !isValid) {
+      detectRow.innerHTML = `<span class="platform-badge error-badge">❌ Unsupported platform — Only Facebook video URLs are accepted</span>`;
+    } else {
+      detectRow.innerHTML = '';
+    }
+  }
+}
+
+// format selection
 function selectFormat(fmt) {
   selectedFormat = fmt;
   document.getElementById('fmtMp4').className = 'fmt-btn' + (fmt === 'mp4' ? ' active mp4' : '');
   document.getElementById('fmtMp3').className = 'fmt-btn' + (fmt === 'mp3' ? ' active mp3' : '');
 }
 
-// ── PLATFORM DETECTION (Facebook prioritized) ────────────────
-function detectPlatform(val) {
-  const row = document.getElementById('detectRow');
-  val = (val || '').toLowerCase();
-  if (val.includes('facebook.com') || val.includes('fb.watch') || val.includes('fb.com') || val.includes('fbvideo') || val.includes('facebook')) {
-    row.innerHTML = `<span class="platform-badge fb-detected">📘 Facebook video detected — ready for download</span>`;
-  } else if (val.includes('youtube.com') || val.includes('youtu.be')) {
-    row.innerHTML = `<span class="platform-badge" style="color:#f59e0b;border-color:#fde68a">⚠️ YouTube link detected. EmonBook focuses on Facebook video downloader.</span>`;
-  } else if (val.length > 5) {
-    row.innerHTML = `<span class="platform-badge" style="color:#6b7280;border-color:#e5e7eb">🔗 Paste Facebook URL for best results</span>`;
-  } else {
-    row.innerHTML = '';
-  }
-}
-
-// Show waiting/processing state on button
+// processing state
 function setButtonProcessing(isProcessing) {
   const btn = document.getElementById('dlBtn');
   if (isProcessing) {
@@ -604,45 +651,60 @@ function setButtonProcessing(isProcessing) {
   }
 }
 
-// ── DOWNLOAD (Facebook API endpoint) with processing highlight ──
+// ── DOWNLOAD WITH PLATFORM CHECK (frontend guard) ─────────────────
 async function startDownload() {
   const url = document.getElementById('urlInput').value.trim();
-  if (!url) { showToast('Please paste a Facebook video URL', 'error'); return; }
-
-  const taskId = Date.now().toString();
-  // highlight processing on button + disable
-  setButtonProcessing(true);
   
+  // FRONTEND VALIDATION: only Facebook links allowed
+  if (!url) {
+    showToast('Please paste a Facebook video URL', 'error');
+    return;
+  }
+  
+  if (!isFacebookUrl(url)) {
+    showToast('❌ Invalid link! Only Facebook video URLs are supported (facebook.com/watch, fb.watch, etc.)', 'error');
+    // highlight error
+    const inputEl = document.getElementById('urlInput');
+    inputEl.classList.add('invalid-input');
+    const statusIcon = document.getElementById('inputStatusIcon');
+    statusIcon.innerHTML = '✗';
+    statusIcon.className = 'input-status invalid-icon';
+    return;
+  }
+  
+  const taskId = Date.now().toString();
+  setButtonProcessing(true);
   showProgress(0, 'Connecting to Facebook video...');
-
+  
   try {
     pollTimer = setInterval(() => pollProgress(taskId), 800);
-
+    
     const res = await fetch('/download', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url, format: selectedFormat, task_id: taskId })
     });
-
+    
     clearInterval(pollTimer);
-
     const data = await res.json();
-
+    
     if (data.error) {
       hideProgress();
       showToast(data.error, 'error');
       setButtonProcessing(false);
       return;
     }
-
+    
     setProgress(100, 'Complete!', true);
     showToast(`✓ Downloaded: ${data.title || 'Facebook video'}`, 'success');
     setButtonProcessing(false);
     document.getElementById('urlInput').value = '';
+    document.getElementById('inputStatusIcon').innerHTML = '';
+    document.getElementById('validationMsg').innerHTML = '';
+    document.getElementById('urlInput').classList.remove('valid-input', 'invalid-input');
     document.getElementById('detectRow').innerHTML = '';
-
     setTimeout(() => { hideProgress(); loadFiles(); }, 1200);
-
+    
   } catch (e) {
     clearInterval(pollTimer);
     hideProgress();
@@ -681,7 +743,7 @@ function hideProgress() {
   document.getElementById('progressWrap').style.display = 'none';
 }
 
-// ── FILE LIST (with download arrow icon on save button) ──
+// ── FILE LIST ─────────────────────────
 async function loadFiles() {
   try {
     const res = await fetch('/list-videos');
@@ -694,73 +756,38 @@ async function loadFiles() {
 
 function renderFiles(files) {
   const wrap = document.getElementById('filesWrap');
-
   if (!files.length) {
     wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">📘</div><p>No Facebook downloads yet. Grab any public Facebook video above!</p></div>`;
     return;
   }
-
-  let html = `<table class="files-table">
-    <thead>
-      <tr>
-        <th>Title</th>
-        <th>Type</th>
-        <th>Size</th>
-        <th>Expires</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>`;
-
+  
+  let html = `<table class="files-table"><thead><tr><th>Title</th><th>Type</th><th>Size</th><th>Expires</th><th>Actions</th></tr></thead><tbody>`;
   files.forEach(f => {
     const secs = f.expires_in;
     const timerClass = secs < 30 ? 'urgent' : secs < 60 ? '' : 'safe';
     const timerText = secs > 0 ? `${secs}s` : 'Expired';
-    const platformTag = `<span class="tag fb">FB</span>`;
-    const fmtTag = `<span class="tag ${f.format}">${f.format.toUpperCase()}</span>`;
-
     html += `<tr>
       <td><div class="file-title" title="${esc(f.title)}">${esc(f.title)}</div></td>
-      <td>${platformTag} ${fmtTag}</td>
+      <td><span class="tag fb">FB</span> <span class="tag ${f.format}">${f.format.toUpperCase()}</span></td>
       <td><span class="size-text">${f.size_mb} MB</span></td>
       <td><span class="timer ${timerClass}">⏱ ${timerText}</span></td>
-      <td>
-        <div class="actions-cell">
-          <a class="action-btn dl" href="${f.download_url}" download><span class="download-arrow-icon"></span> Save</a>
-          <button class="action-btn del" onclick="deleteFile('${esc(f.file)}')">🗑 Delete</button>
-        </div>
-      </td>
+      <td><div class="actions-cell"><a class="action-btn dl" href="${f.download_url}" download><span class="download-arrow-icon"></span> Save</a><button class="action-btn del" onclick="deleteFile('${esc(f.file)}')">🗑 Delete</button></div></td>
     </tr>`;
   });
-
   html += `</tbody></table>`;
   wrap.innerHTML = html;
 }
 
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 async function deleteFile(filename) {
   try {
-    const res = await fetch('/delete-video', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ file: filename })
-    });
+    const res = await fetch('/delete-video', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file: filename }) });
     const d = await res.json();
-    if (d.success) {
-      showToast('🗑 File removed', 'success');
-      loadFiles();
-    } else {
-      showToast(d.error || 'Delete failed', 'error');
-    }
-  } catch {
-    showToast('Could not delete file', 'error');
-  }
+    if (d.success) { showToast('🗑 File removed', 'success'); loadFiles(); } 
+    else { showToast(d.error || 'Delete failed', 'error'); }
+  } catch { showToast('Could not delete file', 'error'); }
 }
 
-// ── TOAST ──────────────────────────────
 let toastTimer = null;
 function showToast(msg, type = '') {
   const t = document.getElementById('toast');
@@ -770,21 +797,8 @@ function showToast(msg, type = '') {
   toastTimer = setTimeout(() => { t.className = 'toast'; }, 3200);
 }
 
-// ── AUTO REFRESH FILE LIST ─────────────
 setInterval(loadFiles, 10000);
-
-// ── INIT & add extra highlight class to input on load ──
-window.addEventListener('DOMContentLoaded', () => {
-  loadFiles();
-  const inputEl = document.getElementById('urlInput');
-  if (inputEl) {
-    inputEl.placeholder = "Paste Facebook video URL (https://facebook.com/watch?v=... or fb.watch/...)";
-    // additional glow effect on active
-    inputEl.addEventListener('focus', () => {
-      inputEl.style.transition = 'all 0.2s';
-    });
-  }
-});
+window.addEventListener('DOMContentLoaded', () => { loadFiles(); });
 </script>
 </body>
 </html>
