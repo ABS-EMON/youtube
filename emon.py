@@ -96,6 +96,11 @@ def download():
                     'preferredcodec': 'mp3',
                     'preferredquality': '192',
                 }],
+                'extractor_args': {
+                    'youtube': {
+                    'player_client': ['tv_embedded', 'mweb'],
+        }
+    },
             }
         else:
             ydl_opts = {
@@ -104,7 +109,14 @@ def download():
                 'quiet': True,
                 'noplaylist': True,
                 'progress_hooks': [progress_hook],
+                'extractor_args': {
+                    'youtube': {
+                        'player_client': ['tv_embedded', 'mweb'],
+        }
+    },
             }
+
+        
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
