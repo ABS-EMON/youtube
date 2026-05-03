@@ -9,7 +9,7 @@ app = Flask(__name__)
 DOWNLOAD_FOLDER = "downloads"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
-# Cookies file — place cookies.txt in project root (same folder as emon.py)
+# Cookies file — same folder as emon.py
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 COOKIES_FILE = os.path.join(BASE_DIR, "cookies.txt")
 
@@ -74,7 +74,6 @@ def build_ydl_opts(fmt, file_path, progress_hook, platform):
 
     # ── YouTube specific ──────────────────────────────────────
     if platform == "youtube":
-        # Always attach cookies if file exists
         if os.path.exists(COOKIES_FILE):
             base['cookiefile'] = COOKIES_FILE
             print(f"[COOKIES] Loaded: {COOKIES_FILE}")
@@ -83,7 +82,6 @@ def build_ydl_opts(fmt, file_path, progress_hook, platform):
 
         base['extractor_args'] = {
             'youtube': {
-                # tv_embedded is least-restricted on server IPs
                 'player_client': ['tv_embedded', 'web', 'mweb'],
             }
         }
@@ -98,8 +96,19 @@ def build_ydl_opts(fmt, file_path, progress_hook, platform):
             'preferredquality': '192',
         }]
     else:
-        base['format'] = 'best[ext=mp4]/best[ext=webm]/best'
+        # Very broad fallback chain — accepts mp4, webm, or literally anything
+        # merge best video + best audio into a single file if possible
+        base['format'] = (
+            'bestvideo[ext=mp4]+bestaudio[ext=m4a]'
+            '/bestvideo[ext=mp4]+bestaudio'
+            '/bestvideo+bestaudio'
+            '/best[ext=mp4]'
+            '/best'
+        )
         base['outtmpl'] = file_path
+        # Let yt-dlp merge streams using ffmpeg if available,
+        # otherwise fall back to a single-file format automatically
+        base['merge_output_format'] = 'mp4'
 
     return base
 
@@ -156,6 +165,15 @@ def download():
                     safe_name = f
                     break
 
+        # If ffmpeg not available, yt-dlp may save as .webm — rename to .mp4
+        # so the download link still works
+        if fmt == "mp4" and not os.path.exists(file_path):
+            for f in os.listdir(DOWNLOAD_FOLDER):
+                if f.startswith(f"video_{task_id}") and not f.endswith(".meta"):
+                    actual = os.path.join(DOWNLOAD_FOLDER, f)
+                    os.rename(actual, file_path)
+                    break
+
         # Write metadata sidecar
         meta_path = os.path.join(DOWNLOAD_FOLDER, f"video_{task_id}.meta")
         with open(meta_path, 'w', encoding='utf-8') as mf:
@@ -203,11 +221,11 @@ def list_videos():
                 meta_path = os.path.join(DOWNLOAD_FOLDER, f)
                 with open(meta_path, 'r', encoding='utf-8') as mf:
                     lines = mf.read().splitlines()
-                title    = lines[0] if len(lines) > 0 else "Unknown"
+                title     = lines[0] if len(lines) > 0 else "Unknown"
                 safe_name = lines[1] if len(lines) > 1 else ""
-                fmt      = lines[2] if len(lines) > 2 else "mp4"
-                platform = lines[3] if len(lines) > 3 else "unknown"
-                ts       = float(lines[4]) if len(lines) > 4 else 0
+                fmt       = lines[2] if len(lines) > 2 else "mp4"
+                platform  = lines[3] if len(lines) > 3 else "unknown"
+                ts        = float(lines[4]) if len(lines) > 4 else 0
 
                 file_path = os.path.join(DOWNLOAD_FOLDER, safe_name)
                 if os.path.exists(file_path):
