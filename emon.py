@@ -3,17 +3,28 @@ import os
 import yt_dlp
 import time
 import threading
+import requests as req
 
 app = Flask(__name__)
 
 DOWNLOAD_FOLDER = "downloads"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
-# Cookies file — same folder as emon.py
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 COOKIES_FILE = os.path.join(BASE_DIR, "cookies.txt")
 
-# Track download progress per task
+# ─────────────────────────────────────────────
+# Cobalt public API instances (auto-rotated)
+# These are community-hosted, no bot detection
+# ─────────────────────────────────────────────
+COBALT_INSTANCES = [
+    "https://cobalt-api.kwiatekmiki.com",
+    "https://cobalt.api.timelessnesses.me",
+    "https://cobalt.ggtyler.dev",
+    "https://cobalt-backend.canine.tools",
+    "https://api.cobalt.tools",
+]
+
 progress_store = {}
 
 
@@ -54,15 +65,121 @@ def detect_platform(url):
 
 
 # =========================
-# BUILD YDL OPTS
+# COBALT API DOWNLOAD
+# Tries each instance in order until one works
 # =========================
-def build_ydl_opts(fmt, file_path, progress_hook, platform):
+def cobalt_download(url, fmt, file_path, task_id):
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+    }
+
+    payload = {
+        "url": url,
+        "videoQuality": "720",
+        "filenameStyle": "basic",
+    }
+
+    if fmt == "mp3":
+        payload["downloadMode"] = "audio"
+        payload["audioFormat"] = "mp3"
+        payload["audioBitrate"] = "192"
+    else:
+        payload["downloadMode"] = "auto"
+        payload["videoFormat"] = "mp4"
+
+    last_error = "All Cobalt instances failed"
+
+    for instance in COBALT_INSTANCES:
+        try:
+            print(f"[COBALT] Trying: {instance}")
+            progress_store[task_id] = {"percent": 10, "status": "downloading"}
+
+            resp = req.post(
+                f"{instance}/",
+                json=payload,
+                headers=headers,
+                timeout=15
+            )
+
+            if resp.status_code != 200:
+                print(f"[COBALT] {instance} returned {resp.status_code}")
+                continue
+
+            data = resp.json()
+            status = data.get("status", "")
+
+            # Cobalt returns a direct stream URL or redirect URL
+            if status in ("stream", "redirect", "tunnel"):
+                download_url = data.get("url")
+                if not download_url:
+                    continue
+
+                progress_store[task_id] = {"percent": 40, "status": "downloading"}
+
+                # Stream the file to disk
+                file_resp = req.get(download_url, stream=True, timeout=60)
+                file_resp.raise_for_status()
+
+                total = int(file_resp.headers.get("content-length", 0))
+                downloaded = 0
+
+                with open(file_path, "wb") as f:
+                    for chunk in file_resp.iter_content(chunk_size=65536):
+                        if chunk:
+                            f.write(chunk)
+                            downloaded += len(chunk)
+                            if total > 0:
+                                pct = min(95, 40 + int((downloaded / total) * 55))
+                                progress_store[task_id] = {
+                                    "percent": pct,
+                                    "status": "downloading"
+                                }
+
+                print(f"[COBALT] Success via {instance}")
+                return True, None
+
+            elif status == "picker":
+                # Multiple streams — pick the first video
+                items = data.get("picker", [])
+                if items:
+                    download_url = items[0].get("url")
+                    if download_url:
+                        file_resp = req.get(download_url, stream=True, timeout=60)
+                        file_resp.raise_for_status()
+                        with open(file_path, "wb") as f:
+                            for chunk in file_resp.iter_content(chunk_size=65536):
+                                if chunk:
+                                    f.write(chunk)
+                        return True, None
+
+            elif status == "error":
+                last_error = data.get("error", {}).get("code", "unknown cobalt error")
+                print(f"[COBALT] {instance} error: {last_error}")
+                continue
+            else:
+                print(f"[COBALT] {instance} unknown status: {status}")
+                continue
+
+        except Exception as e:
+            print(f"[COBALT] {instance} exception: {e}")
+            last_error = str(e)
+            continue
+
+    return False, last_error
+
+
+# =========================
+# YT-DLP FALLBACK
+# Used if all Cobalt instances fail
+# =========================
+def ytdlp_download(url, fmt, file_path, progress_hook, platform):
     base = {
         'quiet': True,
         'noplaylist': True,
         'progress_hooks': [progress_hook],
         'socket_timeout': 30,
-        'retries': 5,
+        'retries': 3,
         'http_headers': {
             'User-Agent': (
                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
@@ -72,21 +189,15 @@ def build_ydl_opts(fmt, file_path, progress_hook, platform):
         },
     }
 
-    # ── YouTube specific ──────────────────────────────────────
     if platform == "youtube":
         if os.path.exists(COOKIES_FILE):
             base['cookiefile'] = COOKIES_FILE
-            print(f"[COOKIES] Loaded: {COOKIES_FILE}")
-        else:
-            print(f"[COOKIES] WARNING: cookies.txt not found at {COOKIES_FILE}")
-
         base['extractor_args'] = {
             'youtube': {
                 'player_client': ['tv_embedded', 'web', 'mweb'],
             }
         }
 
-    # ── Format ───────────────────────────────────────────────
     if fmt == "mp3":
         base['format'] = 'bestaudio/best'
         base['outtmpl'] = file_path.replace('.mp3', '.%(ext)s')
@@ -96,25 +207,22 @@ def build_ydl_opts(fmt, file_path, progress_hook, platform):
             'preferredquality': '192',
         }]
     else:
-        # Very broad fallback chain — accepts mp4, webm, or literally anything
-        # merge best video + best audio into a single file if possible
         base['format'] = (
             'bestvideo[ext=mp4]+bestaudio[ext=m4a]'
-            '/bestvideo[ext=mp4]+bestaudio'
             '/bestvideo+bestaudio'
             '/best[ext=mp4]'
             '/best'
         )
         base['outtmpl'] = file_path
-        # Let yt-dlp merge streams using ffmpeg if available,
-        # otherwise fall back to a single-file format automatically
         base['merge_output_format'] = 'mp4'
 
-    return base
+    with yt_dlp.YoutubeDL(base) as ydl:
+        info = ydl.extract_info(url, download=True)
+        return info.get("title", "Video")
 
 
 # =========================
-# DOWNLOAD VIDEO/AUDIO
+# DOWNLOAD ROUTE
 # =========================
 @app.route('/download', methods=['POST'])
 def download():
@@ -135,38 +243,52 @@ def download():
         safe_name = f"video_{task_id}.{ext}"
         file_path = os.path.join(DOWNLOAD_FOLDER, safe_name)
 
-        # Init progress
         progress_store[task_id] = {"percent": 0, "status": "starting"}
+        title = "Video"
 
-        def progress_hook(d):
-            if d['status'] == 'downloading':
-                pct = d.get('_percent_str', '0%').strip().replace('%', '')
-                try:
-                    progress_store[task_id] = {
-                        "percent": float(pct),
-                        "status": "downloading"
-                    }
-                except Exception:
-                    pass
-            elif d['status'] == 'finished':
-                progress_store[task_id] = {"percent": 100, "status": "finished"}
+        # ── 1. Try Cobalt API first (no bot issues) ──
+        print(f"[DOWNLOAD] Trying Cobalt API for: {url}")
+        cobalt_ok, cobalt_err = cobalt_download(url, fmt, file_path, task_id)
 
-        ydl_opts = build_ydl_opts(fmt, file_path, progress_hook, platform)
+        if cobalt_ok and os.path.exists(file_path) and os.path.getsize(file_path) > 1024:
+            print("[DOWNLOAD] Cobalt succeeded")
+            # Try to get title via yt-dlp info extraction (no download)
+            try:
+                with yt_dlp.YoutubeDL({'quiet': True, 'skip_download': True}) as ydl:
+                    info = ydl.extract_info(url, download=False)
+                    title = info.get("title", "Video")
+            except Exception:
+                title = "Video"
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            title = info.get("title", "Video")
+        else:
+            # ── 2. Fallback to yt-dlp ──
+            print(f"[DOWNLOAD] Cobalt failed ({cobalt_err}), falling back to yt-dlp")
+            progress_store[task_id] = {"percent": 5, "status": "downloading"}
 
-        # mp3: yt-dlp renames the output — find the actual .mp3 file
-        if fmt == "mp3":
+            def progress_hook(d):
+                if d['status'] == 'downloading':
+                    pct = d.get('_percent_str', '0%').strip().replace('%', '')
+                    try:
+                        progress_store[task_id] = {
+                            "percent": float(pct),
+                            "status": "downloading"
+                        }
+                    except Exception:
+                        pass
+                elif d['status'] == 'finished':
+                    progress_store[task_id] = {"percent": 100, "status": "finished"}
+
+            title = ytdlp_download(url, fmt, file_path, progress_hook, platform)
+
+        # mp3: find the renamed file
+        if fmt == "mp3" and not os.path.exists(file_path):
             for f in os.listdir(DOWNLOAD_FOLDER):
                 if f.startswith(f"video_{task_id}") and f.endswith(".mp3"):
                     file_path = os.path.join(DOWNLOAD_FOLDER, f)
                     safe_name = f
                     break
 
-        # If ffmpeg not available, yt-dlp may save as .webm — rename to .mp4
-        # so the download link still works
+        # mp4: yt-dlp may have saved as .webm — rename it
         if fmt == "mp4" and not os.path.exists(file_path):
             for f in os.listdir(DOWNLOAD_FOLDER):
                 if f.startswith(f"video_{task_id}") and not f.endswith(".meta"):
